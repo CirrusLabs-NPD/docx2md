@@ -12,8 +12,8 @@ This project provides a utility to convert `.docx` files to Markdown format and 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/yourusername/docx-to-md-converter.git
-cd docx-to-md-converter
+git clone [https://github.com/yourusername/docx-to-md-converter.git](https://github.com/Deloitte-Global-Cloud-Services/docx2md.git)
+cd docx2md
 ```
 
 ### 2. Set Up Virtual Environment
