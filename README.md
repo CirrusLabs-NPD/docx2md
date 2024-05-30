@@ -12,7 +12,10 @@ This project provides a utility to convert `.docx` files to Markdown format and 
 ### 1. Clone the Repository
 
 ```bash
-git clone [https://github.com/yourusername/docx-to-md-converter.git](https://github.com/Deloitte-Global-Cloud-Services/docx2md.git)
+git clone https://github.com/Deloitte-Global-Cloud-Services/docx2md.git
+```
+
+```bash
 cd docx2md
 ```
 
@@ -44,7 +47,7 @@ pip install python-docx markdown streamlit
 ### 5. Directory Structure
 Ensure your directory structure looks like this:
 ```bash
-docx-to-md-converter/
+docx2md/
 │
 ├── images/
 │
