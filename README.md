@@ -61,16 +61,15 @@ docx2md/
 Start the Streamlit app:
 
 ```bash
- python -m streamlit run app.py
-
+python app.py          
 ```
 
 ### 7. Using the App
-- Open the provided URL in your browser (usually http://localhost:8501).
 
 - Upload a .docx file using the file uploader.
 View the converted Markdown content and download the Markdown file.
 - View any extracted images from the .docx file.
+
 ### 8. Project Files:
 - app.py: Contains the Streamlit app code.
 - utils.py: Contains utility functions for converting .docx to Markdown and reading Markdown files.
