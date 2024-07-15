@@ -1,6 +1,7 @@
 # DOCX to Markdown Converter
 
 This project provides a utility to convert `.docx` files to Markdown format.
+
 ## Prerequisites
 
 - Python 3.6 or later
@@ -56,7 +57,7 @@ docx2md/
 └── utils.py
 
 ```
-### 6. Run the Streamlit App
+### 6. Run the python App
 Start the Streamlit app:
 
 ```bash
