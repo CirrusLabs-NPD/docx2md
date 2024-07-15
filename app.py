@@ -1,8 +1,10 @@
 import tkinter as tk
-from tkinter import filedialog, messagebox
+from tkinter import ttk, filedialog, messagebox, simpledialog
 import os
 import shutil
 from PIL import Image, ImageTk
+import requests
+import base64
 from utils import convert_docx_to_markdown, read_markdown_file
 
 
@@ -15,6 +17,8 @@ def upload_file():
 
 
 def convert_and_display(file_name):
+    global current_file_name
+    current_file_name = file_name
     output_md_path = os.path.join(output_dir, f"{os.path.splitext(file_name)[0]}.md")
     images_dir = os.path.join(output_dir, "images")
     os.makedirs(images_dir, exist_ok=True)
@@ -34,16 +38,15 @@ def convert_and_display(file_name):
         if image_file.endswith((".png", ".jpg", ".jpeg")):
             image_path = os.path.abspath(os.path.join(images_dir, image_file))
             img = Image.open(image_path)
-            img = img.resize(
-                (200, 200), Image.LANCZOS
-            )  # Resize image to fit the display
+            img = img.resize((200, 200), Image.LANCZOS)
             img = ImageTk.PhotoImage(img)
-            img_label = tk.Label(image_frame, image=img)
+            img_label = ttk.Label(image_frame, image=img)
             img_label.image = img
             img_label.pack()
 
     shutil.make_archive(output_dir, "zip", output_dir)
     download_button.config(state=tk.NORMAL)
+    github_button.config(state=tk.NORMAL)
 
 
 def download_output():
@@ -55,6 +58,95 @@ def download_output():
         messagebox.showinfo("Download", "Download successful!")
 
 
+def save_on_github():
+    github_token = simpledialog.askstring("GitHub Token", "Enter your GitHub token:")
+    if not github_token:
+        return
+
+    org_name = simpledialog.askstring(
+        "Organization Name", "Enter the organization name:"
+    )
+    repo_option = messagebox.askyesno(
+        "GitHub Repository", "Do you want to create a new repository?"
+    )
+    if repo_option:
+        repo_name = simpledialog.askstring(
+            "Repository Name", "Enter the name for the new repository:"
+        )
+        create_repo(org_name, repo_name, github_token)
+    else:
+        repo_name = simpledialog.askstring(
+            "Repository Name", "Enter the name of the existing repository:"
+        )
+
+    branch_name = simpledialog.askstring(
+        "Branch Name", "Enter the branch name:", initialvalue="main"
+    )
+    github_pages = messagebox.askyesno(
+        "GitHub Pages", "Do you want to enable GitHub Pages for this repository?"
+    )
+
+    output_md_path = os.path.join(
+        output_dir, f"{os.path.splitext(current_file_name)[0]}.md"
+    )
+    with open(output_md_path, "r") as f:
+        md_content = f.read()
+
+    file_path_in_repo = os.path.basename(output_md_path)
+    add_file_to_repo(org_name, repo_name, file_path_in_repo, md_content, github_token)
+    if github_pages:
+        enable_github_pages(github_token, repo_name)
+
+
+def create_repo(org_name, repo_name, token):
+    url = f"https://api.github.com/orgs/{org_name}/repos"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+    payload = {"name": repo_name, "private": True}
+    response = requests.post(url, headers=headers, json=payload)
+
+    if response.status_code == 201:
+        messagebox.showinfo("GitHub", f"Repository '{repo_name}' created successfully!")
+    else:
+        messagebox.showerror(
+            "GitHub", f"Failed to create repository. Error: {response.text}"
+        )
+
+
+def add_file_to_repo(org_name, repo_name, file_path, file_content, token):
+    url = f"https://api.github.com/repos/{org_name}/{repo_name}/contents/{file_path}"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+    payload = {
+        "message": "Add file",
+        "content": base64.b64encode(file_content.encode()).decode(),
+    }
+    response = requests.put(url, headers=headers, json=payload)
+
+    if response.status_code == 201:
+        messagebox.showinfo("GitHub", f"File '{file_path}' added successfully!")
+    else:
+        messagebox.showerror("GitHub", f"Failed to add file. Error: {response.text}")
+
+
+def enable_github_pages(token, repo):
+    url = f"https://api.github.com/repos/{repo}/pages"
+    data = {"source": {"branch": "main", "path": "/"}}
+    headers = {"Authorization": f"Bearer {token}", "Content-Type": "application/json"}
+    response = requests.post(url, json=data, headers=headers)
+    if response.status_code == 201:
+        messagebox.showinfo("GitHub Pages", "GitHub Pages enabled successfully!")
+    else:
+        messagebox.showerror(
+            "GitHub Pages",
+            f"Failed to enable GitHub Pages: {response.json().get('message')}",
+        )
+
+
 # Setup directories
 upload_dir = "upload"
 os.makedirs(upload_dir, exist_ok=True)
@@ -64,38 +156,56 @@ os.makedirs(output_dir, exist_ok=True)
 # GUI setup
 root = tk.Tk()
 root.title("DOCX to Markdown Converter")
+root.geometry("800x600")
 
-header = tk.Label(root, text="DOCX to Markdown Converter", font=("Arial", 18))
+style = ttk.Style()
+style.configure("TLabel", font=("Helvetica", 12))
+style.configure("TButton", font=("Helvetica", 12))
+style.configure("TText", font=("Helvetica", 12))
+style.configure("Header.TLabel", font=("Helvetica", 18, "bold"))
+style.configure("TFrame", background="#f0f0f0")
+
+header = ttk.Label(root, text="DOCX to Markdown Converter", style="Header.TLabel")
 header.pack(pady=10)
 
-info = tk.Label(
+info = ttk.Label(
     root,
     text="Upload a DOCX file to convert it to Markdown.\nImages embedded in the DOCX file will be extracted and saved in the 'output/images' directory.\nThe converted Markdown file will be saved in the 'output' directory.",
-    wraplength=400,
+    wraplength=600,
+    justify=tk.CENTER,
+    style="TLabel",
 )
 info.pack(pady=10)
 
-upload_button = tk.Button(root, text="Upload DOCX File", command=upload_file)
-upload_button.pack(pady=10)
+button_frame = ttk.Frame(root, padding="10 10 10 10")
+button_frame.pack(pady=10)
 
-download_button = tk.Button(
-    root,
+upload_button = ttk.Button(button_frame, text="Upload DOCX File", command=upload_file)
+upload_button.grid(row=0, column=0, padx=10)
+
+download_button = ttk.Button(
+    button_frame,
     text="Download Output Directory",
     command=download_output,
+    state=tk.DISABLED,
 )
-download_button.pack(pady=10)
+download_button.grid(row=0, column=1, padx=10)
 
-md_label = tk.Label(root, text="Converted Markdown:")
+github_button = ttk.Button(
+    button_frame, text="Publish on GitHub", command=save_on_github, state=tk.DISABLED
+)
+github_button.grid(row=0, column=2, padx=10)
+
+md_label = ttk.Label(root, text="Converted Markdown:")
 md_label.pack(pady=10)
 
-md_text = tk.Text(root, height=20, width=60)
+md_text = tk.Text(root, height=15, width=80, font=("Helvetica", 12))
 md_text.pack(pady=10)
 
-image_frame = tk.Frame(root)
+image_frame = ttk.Frame(root)
 image_frame.pack(pady=10)
 
-
-footer = tk.Label(root, text="Created by Dev Squad")
+footer = ttk.Label(root, text="Created by Dev Squad", style="TLabel")
 footer.pack(pady=10)
 
 root.mainloop()

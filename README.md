@@ -1,10 +1,6 @@
 # DOCX to Markdown Converter
 
-This project provides a utility to convert `.docx` files to Markdown format and a Streamlit application to facilitate the conversion process.
-
-
-https://github.com/Deloitte-Global-Cloud-Services/docx2md/assets/140524059/014f4b93-6eb1-4b8a-9a17-d25a6aff698e
-
+This project provides a utility to convert `.docx` files to Markdown format.
 
 ## Prerequisites
 
@@ -61,7 +57,7 @@ docx2md/
 └── utils.py
 
 ```
-### 6. Run the Streamlit App
+### 6. Run the python App
 Start the Streamlit app:
 
 ```bash
