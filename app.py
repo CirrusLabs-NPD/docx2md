@@ -95,7 +95,7 @@ def save_on_github():
     file_path_in_repo = os.path.basename(output_md_path)
     add_file_to_repo(org_name, repo_name, file_path_in_repo, md_content, github_token)
     if github_pages:
-        enable_github_pages(github_token, repo_name)
+        create_github_pages(org_name, repo_name, github_token)
 
 
 def create_repo(org_name, repo_name, token):
@@ -147,6 +147,23 @@ def enable_github_pages(token, repo):
         )
 
 
+def create_github_pages(org_name, repo_name, token):
+    url = f"https://api.github.com/repos/{org_name}/{repo_name}/pages"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github.switcheroo-preview+json",
+    }
+    payload = {"source": {"branch": "main", "path": "/"}}
+    response = requests.post(url, headers=headers, json=payload)
+
+    if response.status_code == 201:
+        pages_url = response.json().get("html_url")
+        print(f"GitHub Pages created successfully for repository '{repo_name}'!")
+        print(f"URL to access the GitHub Pages: {pages_url}")
+    else:
+        print(f"Failed to create GitHub Pages. Error: {response.text}")
+
+
 # Setup directories
 upload_dir = "upload"
 os.makedirs(upload_dir, exist_ok=True)
@@ -165,6 +182,52 @@ style.configure("TText", font=("Helvetica", 12))
 style.configure("Header.TLabel", font=("Helvetica", 18, "bold"))
 style.configure("TFrame", background="#f0f0f0")
 
+# Adding custom styles for buttons with improved UI
+style.configure(
+    "TUploadButton.TButton",
+    font=("Helvetica", 12, "bold"),
+    background="#4CAF50",
+    foreground="white",
+    padding=10,
+    borderwidth=0,
+    relief="flat",
+)
+style.map(
+    "TUploadButton.TButton",
+    background=[("active", "#45a049"), ("disabled", "#A5D6A7")],
+    foreground=[("active", "white"), ("disabled", "#E8F5E9")],
+)
+
+style.configure(
+    "TDownloadButton.TButton",
+    font=("Helvetica", 12, "bold"),
+    background="#008CBA",
+    foreground="white",
+    padding=10,
+    borderwidth=0,
+    relief="flat",
+)
+style.map(
+    "TDownloadButton.TButton",
+    background=[("active", "#007bb5"), ("disabled", "#90CAF9")],
+    foreground=[("active", "white"), ("disabled", "#E3F2FD")],
+)
+
+style.configure(
+    "TGitHubButton.TButton",
+    font=("Helvetica", 12, "bold"),
+    background="#333333",
+    foreground="white",
+    padding=20,
+    borderwidth=0,
+    relief="flat",
+)
+style.map(
+    "TGitHubButton.TButton",
+    background=[("active", "#555555"), ("disabled", "#B0BEC5")],
+    foreground=[("active", "white"), ("disabled", "#CFD8DC")],
+)
+
 header = ttk.Label(root, text="DOCX to Markdown Converter", style="Header.TLabel")
 header.pack(pady=10)
 
@@ -180,32 +243,39 @@ info.pack(pady=10)
 button_frame = ttk.Frame(root, padding="10 10 10 10")
 button_frame.pack(pady=10)
 
-upload_button = ttk.Button(button_frame, text="Upload DOCX File", command=upload_file)
+upload_button = ttk.Button(
+    button_frame,
+    text="Upload DOCX File",
+    command=upload_file,
+    style="TUploadButton.TButton",
+)
 upload_button.grid(row=0, column=0, padx=10)
 
 download_button = ttk.Button(
     button_frame,
-    text="Download Output Directory",
+    text="Download Output",
     command=download_output,
     state=tk.DISABLED,
+    style="TDownloadButton.TButton",
 )
 download_button.grid(row=0, column=1, padx=10)
 
 github_button = ttk.Button(
-    button_frame, text="Publish on GitHub", command=save_on_github, state=tk.DISABLED
+    button_frame,
+    text="Save on GitHub",
+    command=save_on_github,
+    state=tk.DISABLED,
+    style="TGitHubButton.TButton",
 )
 github_button.grid(row=0, column=2, padx=10)
 
-md_label = ttk.Label(root, text="Converted Markdown:")
-md_label.pack(pady=10)
+text_frame = ttk.Frame(root, padding="10 10 10 10")
+text_frame.pack(pady=10, fill=tk.BOTH, expand=True)
 
-md_text = tk.Text(root, height=15, width=80, font=("Helvetica", 12))
-md_text.pack(pady=10)
+md_text = tk.Text(text_frame, wrap=tk.WORD, font=("Helvetica", 12))
+md_text.pack(fill=tk.BOTH, expand=True)
 
-image_frame = ttk.Frame(root)
+image_frame = ttk.Frame(root, padding="10 10 10 10")
 image_frame.pack(pady=10)
-
-footer = ttk.Label(root, text="Created by Dev Squad", style="TLabel")
-footer.pack(pady=10)
 
 root.mainloop()
