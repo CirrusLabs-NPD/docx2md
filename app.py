@@ -60,6 +60,175 @@ def download_output():
         messagebox.showinfo("Download", "Download successful!")
 
 
+# def save_on_github():
+#     github_token = simpledialog.askstring("GitHub Token", "Enter your GitHub token:")
+#     if not github_token:
+#         return
+
+#     org_name = simpledialog.askstring(
+#         "Organization Name", "Enter the organization name:"
+#     )
+#     repo_option = messagebox.askyesno(
+#         "GitHub Repository", "Do you want to create a new repository?"
+#     )
+#     if repo_option:
+#         repo_name = simpledialog.askstring(
+#             "Repository Name", "Enter the name for the new repository:"
+#         )
+#         create_repo(org_name, repo_name, github_token)
+#     else:
+#         repo_name = simpledialog.askstring(
+#             "Repository Name", "Enter the name of the existing repository:"
+#         )
+
+#     branch_name = simpledialog.askstring(
+#         "Branch Name", "Enter the branch name:", initialvalue="main"
+#     )
+#     github_pages = messagebox.askyesno(
+#         "GitHub Pages", "Do you want to enable GitHub Pages for this repository?"
+#     )
+
+#     output_md_path = os.path.join(
+#         output_dir, f"{os.path.splitext(current_file_name)[0]}.md"
+#     )
+#     with open(output_md_path, "r") as f:
+#         md_content = f.read()
+
+#     file_path_in_repo = os.path.basename(output_md_path)
+#     add_file_to_repo(org_name, repo_name, file_path_in_repo, md_content, github_token)
+#     if github_pages:
+#         create_github_pages(org_name, repo_name, github_token)
+
+
+# def save_on_github():
+#     github_token = simpledialog.askstring("GitHub Token", "Enter your GitHub token:")
+#     if not github_token:
+#         return
+
+#     org_name = simpledialog.askstring(
+#         "Organization Name", "Enter the organization name:"
+#     )
+#     repo_option = messagebox.askyesno(
+#         "GitHub Repository", "Do you want to create a new repository?"
+#     )
+#     if repo_option:
+#         repo_name = simpledialog.askstring(
+#             "Repository Name", "Enter the name for the new repository:"
+#         )
+#         create_repo(org_name, repo_name, github_token)
+#     else:
+#         repo_name = simpledialog.askstring(
+#             "Repository Name", "Enter the name of the existing repository:"
+#         )
+
+#     branch_name = simpledialog.askstring(
+#         "Branch Name", "Enter the branch name:", initialvalue="main"
+#     )
+#     github_pages = messagebox.askyesno(
+#         "GitHub Pages", "Do you want to enable GitHub Pages for this repository?"
+#     )
+
+#     # Upload all Markdown files
+#     for file_name in os.listdir(output_dir):
+#         if file_name.endswith(".md"):
+#             file_path = os.path.join(output_dir, file_name)
+#             with open(file_path, "r") as f:
+#                 md_content = f.read()
+#             file_path_in_repo = os.path.basename(file_path)
+#             add_file_to_repo(
+#                 org_name, repo_name, file_path_in_repo, md_content, github_token
+#             )
+
+#     # Upload images if needed
+#     images_dir = os.path.join(output_dir, "images")
+#     if os.path.isdir(images_dir):
+#         for image_file in os.listdir(images_dir):
+#             if image_file.endswith((".png", ".jpg", ".jpeg")):
+#                 image_path = os.path.join(images_dir, image_file)
+#                 with open(image_path, "rb") as img_file:
+#                     img_content = img_file.read()
+#                 image_base64 = base64.b64encode(img_content).decode()
+#                 image_file_path = f"images/{image_file}"
+#                 add_file_to_repo(
+#                     org_name, repo_name, image_file_path, image_base64, github_token
+#                 )
+
+#     if github_pages:
+#         create_github_pages(org_name, repo_name, github_token)
+
+
+def create_repo(org_name, repo_name, token):
+    url = f"https://api.github.com/orgs/{org_name}/repos"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+    payload = {"name": repo_name, "private": True}
+    response = requests.post(url, headers=headers, json=payload)
+
+    if response.status_code == 201:
+        messagebox.showinfo("GitHub", f"Repository '{repo_name}' created successfully!")
+    else:
+        messagebox.showerror(
+            "GitHub", f"Failed to create repository. Error: {response.text}"
+        )
+
+
+# def add_file_to_repo(org_name, repo_name, file_path, file_content, token):
+#     url = f"https://api.github.com/repos/{org_name}/{repo_name}/contents/{file_path}"
+#     headers = {
+#         "Authorization": f"Bearer {token}",
+#         "Accept": "application/vnd.github.v3+json",
+#     }
+#     payload = {
+#         "message": "Add file",
+#         "content": base64.b64encode(file_content.encode()).decode(),
+#     }
+#     response = requests.put(url, headers=headers, json=payload)
+
+#     if response.status_code == 201:
+#         messagebox.showinfo("GitHub", f"File '{file_path}' added successfully!")
+#     else:
+#         messagebox.showerror("GitHub", f"Failed to add file. Error: {response.text}")
+
+
+# def add_file_to_repo(org_name, repo_name, file_path, file_content, token):
+#     url = f"https://api.github.com/repos/{org_name}/{repo_name}/contents/{file_path}"
+#     headers = {
+#         "Authorization": f"Bearer {token}",
+#         "Accept": "application/vnd.github.v3+json",
+#     }
+#     payload = {
+#         "message": "Add file",
+#         "content": file_content,  # This should be base64-encoded content
+#     }
+#     response = requests.put(url, headers=headers, json=payload)
+
+#     if response.status_code == 201:
+#         messagebox.showinfo("GitHub", f"File '{file_path}' added successfully!")
+#     else:
+#         print("GitHub", f"Failed to add file. Error: {response.text}")
+#         messagebox.showerror("GitHub", f"Failed to add file. Error: {response.text}")
+
+
+def add_file_to_repo(org_name, repo_name, file_path, file_content, token):
+    url = f"https://api.github.com/repos/{org_name}/{repo_name}/contents/{file_path}"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+    payload = {
+        "message": "Add file",
+        "content": file_content,  # This should be base64-encoded content
+    }
+    response = requests.put(url, headers=headers, json=payload)
+
+    if response.status_code == 201:
+        messagebox.showinfo("GitHub", f"File '{file_path}' added successfully!")
+    else:
+        messagebox.showerror("GitHub", f"Failed to add file. Error: {response.text}")
+
+
 def save_on_github():
     github_token = simpledialog.askstring("GitHub Token", "Enter your GitHub token:")
     if not github_token:
@@ -88,51 +257,38 @@ def save_on_github():
         "GitHub Pages", "Do you want to enable GitHub Pages for this repository?"
     )
 
-    output_md_path = os.path.join(
-        output_dir, f"{os.path.splitext(current_file_name)[0]}.md"
-    )
-    with open(output_md_path, "r") as f:
-        md_content = f.read()
+    # Upload all Markdown files
+    for file_name in os.listdir(output_dir):
+        if file_name.endswith(".md"):
+            file_path = os.path.join(output_dir, file_name)
+            with open(file_path, "r") as f:
+                md_content = f.read()
+            file_content_base64 = base64.b64encode(md_content.encode()).decode()
+            file_path_in_repo = os.path.basename(file_path)
+            add_file_to_repo(
+                org_name,
+                repo_name,
+                file_path_in_repo,
+                file_content_base64,
+                github_token,
+            )
 
-    file_path_in_repo = os.path.basename(output_md_path)
-    add_file_to_repo(org_name, repo_name, file_path_in_repo, md_content, github_token)
+    # Upload images if needed
+    images_dir = os.path.join(output_dir, "images")
+    if os.path.isdir(images_dir):
+        for image_file in os.listdir(images_dir):
+            if image_file.endswith((".png", ".jpg", ".jpeg")):
+                image_path = os.path.join(images_dir, image_file)
+                with open(image_path, "rb") as img_file:
+                    img_content = img_file.read()
+                image_base64 = base64.b64encode(img_content).decode()
+                image_file_path = f"images/{image_file}"
+                add_file_to_repo(
+                    org_name, repo_name, image_file_path, image_base64, github_token
+                )
+
     if github_pages:
         create_github_pages(org_name, repo_name, github_token)
-
-
-def create_repo(org_name, repo_name, token):
-    url = f"https://api.github.com/orgs/{org_name}/repos"
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/vnd.github.v3+json",
-    }
-    payload = {"name": repo_name, "private": True}
-    response = requests.post(url, headers=headers, json=payload)
-
-    if response.status_code == 201:
-        messagebox.showinfo("GitHub", f"Repository '{repo_name}' created successfully!")
-    else:
-        messagebox.showerror(
-            "GitHub", f"Failed to create repository. Error: {response.text}"
-        )
-
-
-def add_file_to_repo(org_name, repo_name, file_path, file_content, token):
-    url = f"https://api.github.com/repos/{org_name}/{repo_name}/contents/{file_path}"
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "Accept": "application/vnd.github.v3+json",
-    }
-    payload = {
-        "message": "Add file",
-        "content": base64.b64encode(file_content.encode()).decode(),
-    }
-    response = requests.put(url, headers=headers, json=payload)
-
-    if response.status_code == 201:
-        messagebox.showinfo("GitHub", f"File '{file_path}' added successfully!")
-    else:
-        messagebox.showerror("GitHub", f"Failed to add file. Error: {response.text}")
 
 
 def enable_github_pages(token, repo):
