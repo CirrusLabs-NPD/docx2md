@@ -10,11 +10,12 @@ from utils import convert_docx_to_markdown, read_markdown_file
 
 
 def upload_file():
-    file_path = filedialog.askopenfilename(filetypes=[("DOCX files", "*.docx")])
-    if file_path:
-        file_name = os.path.basename(file_path)
-        shutil.copy(file_path, os.path.join(upload_dir, file_name))
-        convert_and_display(file_name)
+    file_paths = filedialog.askopenfilenames(filetypes=[("DOCX files", "*.docx")])
+    if file_paths:
+        for file_path in file_paths:
+            file_name = os.path.basename(file_path)
+            shutil.copy(file_path, os.path.join(upload_dir, file_name))
+            convert_and_display(file_name)
 
 
 def convert_and_display(file_name):
@@ -233,8 +234,8 @@ style.configure(
 )
 style.map(
     "TDownloadButton.TButton",
-    background=[("active", "#007bb5"), ("disabled", "#90CAF9")],
-    foreground=[("active", "white"), ("disabled", "#E3F2FD")],
+    background=[("active", "#F5E7B2"), ("disabled", "#BBE9FF")],
+    foreground=[("active", "white"), ("disabled", "#FFFFFF")],
 )
 
 style.configure(
@@ -242,80 +243,71 @@ style.configure(
     font=("Helvetica", 12, "bold"),
     background="#333333",
     foreground="white",
-    padding=20,
+    padding=10,
     borderwidth=0,
     relief="flat",
 )
 style.map(
     "TGitHubButton.TButton",
-    background=[("active", "#555555"), ("disabled", "#B0BEC5")],
-    foreground=[("active", "white"), ("disabled", "#CFD8DC")],
+    background=[("active", "#1a1a1a"), ("disabled", "#BDBDBD")],
+    foreground=[("active", "white"), ("disabled", "#F5F5F5")],
 )
 
-header = ttk.Label(root, text="DOCX to Markdown Converter", style="Header.TLabel")
-header.pack(pady=10)
-
-# info = ttk.Label(
-#     root,
-#     text="Upload a DOCX file to convert it to Markdown.\nImages embedded in the DOCX file will be extracted and saved in the 'output/images' directory.\nThe converted Markdown file will be saved in the 'output' directory.",
-#     style="TLabel",
-# )
-# info.pack(pady=10)
+header_label = ttk.Label(root, text="DOCX to Markdown Converter", style="Header.TLabel")
+header_label.pack(pady=20)
 
 upload_button = ttk.Button(
-    root, text="Upload DOCX File", command=upload_file, style="TUploadButton.TButton"
+    root, text="Upload DOCX Files", command=upload_file, style="TUploadButton.TButton"
 )
 upload_button.pack(pady=10)
 
-upload_button = ttk.Button(
-    root,
-    text="Download Output",
-    command=download_output,
-    style="TDownloadButton.TButton",
-)
-upload_button.pack(pady=5)
+md_label = ttk.Label(root, text="Markdown Output", style="TLabel")
+md_label.pack(pady=10)
 
-md_text = tk.Text(root, wrap=tk.WORD, height=15, bg="#2e2e2e", fg="white")
-md_text.pack(pady=10, fill=tk.BOTH, expand=True)
+md_text = tk.Text(root, wrap=tk.WORD, height=10, width=80, bg="#1e1e1e", fg="white")
+md_text.pack(pady=10)
 
-image_frame = ttk.Frame(root, style="TFrame")
+image_label = ttk.Label(root, text="Images", style="TLabel")
+image_label.pack(pady=10)
+
+image_frame = ttk.Frame(root)
 image_frame.pack(pady=10)
 
-# download_button = ttk.Button(
-#     root,
-#     text="Download Output",
-#     command=download_output,
-#     state=tk.DISABLED,
-#     style="TDownloadButton.TButton",
-# )
-# download_button.pack(pady=10)
+button_frame = ttk.Frame(root)
+button_frame.pack(pady=10)
+
+download_button = ttk.Button(
+    button_frame,
+    text="Download Output",
+    command=download_output,
+    state=tk.DISABLED,
+    style="TDownloadButton.TButton",
+)
+download_button.pack(side=tk.LEFT, padx=10)
 
 github_button = ttk.Button(
-    root,
+    button_frame,
     text="Save on GitHub",
     command=save_on_github,
     state=tk.DISABLED,
     style="TGitHubButton.TButton",
 )
+github_button.pack(side=tk.LEFT, padx=10)
 
-github_button.pack(side=tk.LEFT, padx=5, pady=5)
-
-
-github_guide_button = ttk.Button(
-    root,
-    text="Guide to GitHub",
+guide_button = ttk.Button(
+    button_frame,
+    text="GitHub Guide",
     command=guide_to_github,
     style="TGitHubButton.TButton",
 )
-github_guide_button.pack(side=tk.LEFT, padx=5, pady=5)
+guide_button.pack(side=tk.LEFT, padx=10)
 
-github_pat_button = ttk.Button(
-    root,
+token_button = ttk.Button(
+    button_frame,
     text="GitHub PAT Token",
     command=github_pat_token,
     style="TGitHubButton.TButton",
 )
-github_pat_button.pack(side=tk.LEFT, padx=5, pady=5)
-
+token_button.pack(side=tk.LEFT, padx=10)
 
 root.mainloop()
