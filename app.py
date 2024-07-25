@@ -5,6 +5,7 @@ import shutil
 from PIL import Image, ImageTk
 import requests
 import base64
+import webbrowser
 from utils import convert_docx_to_markdown, read_markdown_file
 
 
@@ -164,6 +165,16 @@ def create_github_pages(org_name, repo_name, token):
         print(f"Failed to create GitHub Pages. Error: {response.text}")
 
 
+def guide_to_github():
+    webbrowser.open_new("https://developer.deloitte.com/ecr-docs/deloittegithub/")
+
+
+def github_pat_token():
+    webbrowser.open_new(
+        "https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/creating-a-personal-access-token"
+    )
+
+
 # Setup directories
 upload_dir = "upload"
 os.makedirs(upload_dir, exist_ok=True)
@@ -174,13 +185,26 @@ os.makedirs(output_dir, exist_ok=True)
 root = tk.Tk()
 root.title("DOCX to Markdown Converter")
 root.geometry("800x600")
+root.configure(bg="#2e2e2e")
 
 style = ttk.Style()
-style.configure("TLabel", font=("Helvetica", 12))
-style.configure("TButton", font=("Helvetica", 12))
-style.configure("TText", font=("Helvetica", 12))
-style.configure("Header.TLabel", font=("Helvetica", 18, "bold"))
-style.configure("TFrame", background="#f0f0f0")
+style.theme_use("clam")
+style.configure(
+    "TLabel", font=("Helvetica", 12), background="#2e2e2e", foreground="white"
+)
+style.configure(
+    "TButton", font=("Helvetica", 12), background="#4CAF50", foreground="white"
+)
+style.configure(
+    "TText", font=("Helvetica", 12), background="#2e2e2e", foreground="white"
+)
+style.configure(
+    "Header.TLabel",
+    font=("Helvetica", 18, "bold"),
+    background="#2e2e2e",
+    foreground="white",
+)
+style.configure("TFrame", background="#2e2e2e")
 
 # Adding custom styles for buttons with improved UI
 style.configure(
@@ -231,51 +255,67 @@ style.map(
 header = ttk.Label(root, text="DOCX to Markdown Converter", style="Header.TLabel")
 header.pack(pady=10)
 
-info = ttk.Label(
-    root,
-    text="Upload a DOCX file to convert it to Markdown.\nImages embedded in the DOCX file will be extracted and saved in the 'output/images' directory.\nThe converted Markdown file will be saved in the 'output' directory.",
-    wraplength=600,
-    justify=tk.CENTER,
-    style="TLabel",
-)
-info.pack(pady=10)
-
-button_frame = ttk.Frame(root, padding="10 10 10 10")
-button_frame.pack(pady=10)
+# info = ttk.Label(
+#     root,
+#     text="Upload a DOCX file to convert it to Markdown.\nImages embedded in the DOCX file will be extracted and saved in the 'output/images' directory.\nThe converted Markdown file will be saved in the 'output' directory.",
+#     style="TLabel",
+# )
+# info.pack(pady=10)
 
 upload_button = ttk.Button(
-    button_frame,
-    text="Upload DOCX File",
-    command=upload_file,
-    style="TUploadButton.TButton",
+    root, text="Upload DOCX File", command=upload_file, style="TUploadButton.TButton"
 )
-upload_button.grid(row=0, column=0, padx=10)
+upload_button.pack(pady=10)
 
-download_button = ttk.Button(
-    button_frame,
+upload_button = ttk.Button(
+    root,
     text="Download Output",
     command=download_output,
-    state=tk.DISABLED,
     style="TDownloadButton.TButton",
 )
-download_button.grid(row=0, column=1, padx=10)
+upload_button.pack(pady=5)
+
+md_text = tk.Text(root, wrap=tk.WORD, height=15, bg="#2e2e2e", fg="white")
+md_text.pack(pady=10, fill=tk.BOTH, expand=True)
+
+image_frame = ttk.Frame(root, style="TFrame")
+image_frame.pack(pady=10)
+
+# download_button = ttk.Button(
+#     root,
+#     text="Download Output",
+#     command=download_output,
+#     state=tk.DISABLED,
+#     style="TDownloadButton.TButton",
+# )
+# download_button.pack(pady=10)
 
 github_button = ttk.Button(
-    button_frame,
+    root,
     text="Save on GitHub",
     command=save_on_github,
     state=tk.DISABLED,
     style="TGitHubButton.TButton",
 )
-github_button.grid(row=0, column=2, padx=10)
 
-text_frame = ttk.Frame(root, padding="10 10 10 10")
-text_frame.pack(pady=10, fill=tk.BOTH, expand=True)
+github_button.pack(side=tk.LEFT, padx=5, pady=5)
 
-md_text = tk.Text(text_frame, wrap=tk.WORD, font=("Helvetica", 12))
-md_text.pack(fill=tk.BOTH, expand=True)
 
-image_frame = ttk.Frame(root, padding="10 10 10 10")
-image_frame.pack(pady=10)
+github_guide_button = ttk.Button(
+    root,
+    text="Guide to GitHub",
+    command=guide_to_github,
+    style="TGitHubButton.TButton",
+)
+github_guide_button.pack(side=tk.LEFT, padx=5, pady=5)
+
+github_pat_button = ttk.Button(
+    root,
+    text="GitHub PAT Token",
+    command=github_pat_token,
+    style="TGitHubButton.TButton",
+)
+github_pat_button.pack(side=tk.LEFT, padx=5, pady=5)
+
 
 root.mainloop()

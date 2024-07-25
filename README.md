@@ -40,7 +40,7 @@ source venv/bin/activate
 Install the necessary Python packages using pip:
 
 ```bash
-pip install python-docx markdown pillow request ttkbootstrap
+pip install python-docx markdown pillow requests
 
 
 ```
