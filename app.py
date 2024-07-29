@@ -263,11 +263,11 @@ def save_on_github():
     md_files = [f for f in os.listdir(output_dir) if f.endswith(".md")]
 
     # Create index.html content
-    index_content = "<html><body><h1>Table Contents</h1><ul>"
+    index_content = '<html><body style="padding: 0;margin:0;font-family:arial"><header style="background-color:black;color:white;padding:1rem;font-weight:bold;font-family:arial">Deloitte</header><main style="padding:1rem;min-height:80vh"><h1 style="color:green">Table of Contents</h1><ul>'
     for md_file in md_files:
         file_link = os.path.basename(md_file)
-        index_content += f'<li><a href="{file_link}">{file_link}</a></li>'
-    index_content += "</ul></body></html>"
+        index_content += f'<li style="margin: 1rem 0;"><a style="text-decoration: none" href="{file_link}">{file_link}</a></li>'
+    index_content += '</ul></main><footer style="background-color:#f0f0f0;color:grey;padding:0.5rem;font-weight:400;font-size:12px;font-family:arial;text-align:center">Created with ❤️ by DevSquad</footer></body></html>'
 
     # Save index.html to output_dir
     index_file_path = os.path.join(output_dir, "index.html")
