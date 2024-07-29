@@ -257,23 +257,52 @@ def save_on_github():
         "GitHub Pages", "Do you want to enable GitHub Pages for this repository?"
     )
 
-    # Upload all Markdown files
-    for file_name in os.listdir(output_dir):
-        if file_name.endswith(".md"):
-            file_path = os.path.join(output_dir, file_name)
-            with open(file_path, "r") as f:
-                md_content = f.read()
-            file_content_base64 = base64.b64encode(md_content.encode()).decode()
-            file_path_in_repo = os.path.basename(file_path)
-            add_file_to_repo(
-                org_name,
-                repo_name,
-                file_path_in_repo,
-                file_content_base64,
-                github_token,
-            )
+    output_dir = "output"  # Replace with the path to your output directory
 
-    # Upload images if needed
+    # Collect all Markdown files
+    md_files = [f for f in os.listdir(output_dir) if f.endswith(".md")]
+
+    # Create index.html content
+    index_content = "<html><body><h1>Table Contents</h1><ul>"
+    for md_file in md_files:
+        file_link = os.path.basename(md_file)
+        index_content += f'<li><a href="{file_link}">{file_link}</a></li>'
+    index_content += "</ul></body></html>"
+
+    # Save index.html to output_dir
+    index_file_path = os.path.join(output_dir, "index.html")
+    with open(index_file_path, "w") as index_file:
+        index_file.write(index_content)
+
+    # Upload all Markdown files and delete them after upload
+    for file_name in md_files:
+        file_path = os.path.join(output_dir, file_name)
+        with open(file_path, "r") as f:
+            md_content = f.read()
+        file_content_base64 = base64.b64encode(md_content.encode()).decode()
+        file_path_in_repo = os.path.basename(file_path)
+        add_file_to_repo(
+            org_name,
+            repo_name,
+            file_path_in_repo,
+            file_content_base64,
+            github_token,
+        )
+        os.remove(file_path)  # Delete the file after uploading
+
+    # Upload index.html file and delete it after upload
+    with open(index_file_path, "r") as index_file:
+        index_content_base64 = base64.b64encode(index_file.read().encode()).decode()
+    add_file_to_repo(
+        org_name,
+        repo_name,
+        "index.html",
+        index_content_base64,
+        github_token,
+    )
+    os.remove(index_file_path)  # Delete the file after uploading
+
+    # Upload images if needed and delete them after upload
     images_dir = os.path.join(output_dir, "images")
     if os.path.isdir(images_dir):
         for image_file in os.listdir(images_dir):
@@ -286,6 +315,7 @@ def save_on_github():
                 add_file_to_repo(
                     org_name, repo_name, image_file_path, image_base64, github_token
                 )
+                os.remove(image_path)  # Delete the image file after uploading
 
     if github_pages:
         create_github_pages(org_name, repo_name, github_token)
@@ -318,6 +348,9 @@ def create_github_pages(org_name, repo_name, token):
         pages_url = response.json().get("html_url")
         print(f"GitHub Pages created successfully for repository '{repo_name}'!")
         print(f"URL to access the GitHub Pages: {pages_url}")
+        messagebox.showinfo(
+            "GitHub Pages", f"URL to access the GitHub Pages: {pages_url}"
+        )
     else:
         print(f"Failed to create GitHub Pages. Error: {response.text}")
 
