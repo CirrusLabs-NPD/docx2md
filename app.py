@@ -258,16 +258,49 @@ def save_on_github():
     )
 
     output_dir = "output"  # Replace with the path to your output directory
-
+    src_script = "script.js"
+    src_styles = "styles.css"
+    # Copy the files to the output directory
+    shutil.copy(src_script, os.path.join(output_dir, src_script))
+    shutil.copy(src_styles, os.path.join(output_dir, src_styles))
     # Collect all Markdown files
     md_files = [f for f in os.listdir(output_dir) if f.endswith(".md")]
 
     # Create index.html content
-    index_content = '<html><body style="padding: 0;margin:0;font-family:arial"><header style="background-color:black;color:white;padding:1rem;font-weight:bold;font-family:arial">Deloitte</header><main style="padding:1rem;min-height:80vh"><h1 style="color:green">Table of Contents</h1><ul>'
+    index_content = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Doc2MD Converter</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+    <script src="https://unpkg.com/markdown-it/dist/markdown-it.min.js"></script>
+    <script src="https://unpkg.com/marked/marked.min.js"></script>
+    <script src="https://unpkg.com/markdown-it-imsize/dist/markdown-it-imsize.min.js"></script>
+    <script src="script.js"></script>
+</head>
+<body>
+<header style="background-color:black;color:white;padding:1rem;font-weight:bold;font-family:arial;position:fixed;left:0;top:0;width:100%">Deloitte</header>'
+    <div id="main-div-page">
+        <div id="sidebar">
+            <ul>
+            <li><a href="#content"></a></li>
+"""
+
     for md_file in md_files:
         file_link = os.path.basename(md_file)
-        index_content += f'<li style="margin: 1rem 0;"><a style="text-decoration: none" href="{file_link}">{file_link}</a></li>'
-    index_content += '</ul></main><footer style="background-color:#f0f0f0;color:grey;padding:0.5rem;font-weight:400;font-size:12px;font-family:arial;text-align:center">Created with ❤️ by DevSquad</footer></body></html>'
+        # Ensure file_link is properly quoted in JavaScript
+        display_name = file_link.replace(".md", "")
+        index_content += f'<li><a href="#" onclick="handleMenuItemClick(\'{file_link}\')">{display_name}</a></li>'
+
+    index_content += """
+            </ul>
+            </div>
+            <div id="content"></div>
+            </div>
+            </body>
+            </html>
+            """
 
     # Save index.html to output_dir
     index_file_path = os.path.join(output_dir, "index.html")
@@ -298,6 +331,27 @@ def save_on_github():
         repo_name,
         "index.html",
         index_content_base64,
+        github_token,
+    )
+
+    style_file_path = os.path.join(output_dir, "styles.css")
+    with open(style_file_path, "r") as style_file:
+        style_content_base64 = base64.b64encode(style_file.read().encode()).decode()
+    add_file_to_repo(
+        org_name,
+        repo_name,
+        "styles.css",
+        style_content_base64,
+        github_token,
+    )
+    script_file_path = os.path.join(output_dir, "script.js")
+    with open(script_file_path, "r") as script_file:
+        script_content_base64 = base64.b64encode(script_file.read().encode()).decode()
+    add_file_to_repo(
+        org_name,
+        repo_name,
+        "script.js",
+        script_content_base64,
         github_token,
     )
     os.remove(index_file_path)  # Delete the file after uploading
