@@ -81,12 +81,7 @@ def add_file_to_repo(org_name, repo_name, file_path, file_content, token):
         "message": "Add file",
         "content": file_content,  # This should be base64-encoded content
     }
-    response = requests.put(url, headers=headers, json=payload)
-
-    if response.status_code == 201:
-        messagebox.showinfo("GitHub", f"File '{file_path}' added successfully!")
-    else:
-        messagebox.showerror("GitHub", f"Failed to add file. Error: {response.text}")
+    requests.put(url, headers=headers, json=payload)
 
 
 def save_on_github():
