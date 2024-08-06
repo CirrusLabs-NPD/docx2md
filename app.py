@@ -6,6 +6,7 @@ from PIL import Image, ImageTk
 import requests
 import base64
 import webbrowser
+import subprocess
 from utils import convert_docx_to_markdown, read_markdown_file
 
 
@@ -84,6 +85,45 @@ def add_file_to_repo(org_name, repo_name, file_path, file_content, token):
     requests.put(url, headers=headers, json=payload)
 
 
+def clone_repo(org_name, repo_name, token, output_dir):
+    # Construct the repository URL
+    repo_url = f"https://{token}@github.com/{org_name}/{repo_name}.git"
+
+    # Ensure the output directory exists and is writable
+    if not os.path.exists(output_dir):
+        try:
+            os.makedirs(output_dir)
+        except OSError as e:
+            print(f"Failed to create directory '{output_dir}'. Error: {e}")
+            return
+
+    # Construct the command to clone the repository
+    clone_command = ["git", "clone", repo_url, output_dir]
+
+    # Execute the command
+    try:
+        subprocess.run(clone_command, check=True)
+        print(f"Repository '{org_name}/{repo_name}' cloned into '{output_dir}'")
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to clone repository. Error: {e}")
+
+
+def get_repo_info(org_name, repo_name, token):
+    url = f"https://api.github.com/repos/{org_name}/{repo_name}"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+    response = requests.get(url, headers=headers)
+    if response.status_code == 200:
+        return response.json()
+    else:
+        messagebox.showerror(
+            "GitHub", f"Failed to get repository info. Error: {response.text}"
+        )
+        return None
+
+
 def save_on_github():
     github_token = simpledialog.askstring("GitHub Token", "Enter your GitHub token:")
     if not github_token:
@@ -105,6 +145,218 @@ def save_on_github():
             "Repository Name", "Enter the name of the existing repository:"
         )
 
+    clone_repo(org_name, repo_name, github_token, "clonned")
+    if repo_option:
+        new_repo_pipeline(org_name, repo_name, github_token)
+    else:
+        existing_repo_pipeline(org_name, repo_name, github_token)
+
+
+# def push_files_to_repo(org_name, repo_name, branch_name, github_token, directory):
+#     # GitHub API URL for the repository
+#     api_url = f"https://api.github.com/repos/{org_name}/{repo_name}/contents/"
+
+#     headers = {
+#         "Authorization": f"token {github_token}",
+#         "Accept": "application/vnd.github.v3+json",
+#     }
+
+#     # Walk through the directory and push files
+#     for root, dirs, files in os.walk(directory):
+#         for file_name in files:
+#             file_path = os.path.join(root, file_name)
+#             relative_path = os.path.relpath(file_path, directory)
+
+#             with open(file_path, "rb") as file:
+#                 file_content = file.read()
+
+#             file_content_base64 = base64.b64encode(file_content).decode()
+
+#             # Prepare the data for GitHub API
+#             data = {
+#                 "message": f"Update {relative_path}",
+#                 "content": file_content_base64,
+#                 "branch": branch_name,
+#             }
+
+#             # Determine the file path in the repo
+#             api_file_url = api_url + relative_path
+
+#             # Check if the file exists in the repo
+#             response = requests.get(api_file_url, headers=headers)
+
+#             if response.status_code == 200:
+#                 # File exists, update it
+#                 file_info = response.json()
+#                 data["sha"] = file_info["sha"]
+#                 response = requests.put(api_file_url, headers=headers, json=data)
+#             elif response.status_code == 404:
+#                 # File does not exist, create it
+#                 response = requests.put(api_file_url, headers=headers, json=data)
+#             else:
+#                 response.raise_for_status()
+
+#             if response.status_code not in [200, 201]:
+#                 print(
+#                     f"Failed to push {relative_path}: {response.status_code} {response.text}"
+#                 )
+
+
+def push_files_to_repo(org_name, repo_name, branch_name, github_token, directory):
+    # GitHub API URL for the repository
+    api_url = f"https://api.github.com/repos/{org_name}/{repo_name}/contents/"
+
+    headers = {
+        "Authorization": f"token {github_token}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+
+    # Walk through the directory and push files
+    for root, dirs, files in os.walk(directory):
+        # Skip hidden directories (e.g., .git)
+        dirs[:] = [d for d in dirs if not d.startswith(".")]
+
+        for file_name in files:
+            if file_name.startswith("."):
+                continue  # Skip hidden files
+
+            file_path = os.path.join(root, file_name)
+            relative_path = os.path.relpath(file_path, directory)
+
+            with open(file_path, "rb") as file:
+                file_content = file.read()
+
+            file_content_base64 = base64.b64encode(file_content).decode()
+
+            # Prepare the data for GitHub API
+            data = {
+                "message": f"Update {relative_path}",
+                "content": file_content_base64,
+                "branch": branch_name,
+            }
+
+            # Determine the file path in the repo
+            api_file_url = api_url + relative_path
+
+            # Check if the file exists in the repo
+            response = requests.get(api_file_url, headers=headers)
+
+            if response.status_code == 200:
+                # File exists, update it
+                file_info = response.json()
+                data["sha"] = file_info["sha"]
+                response = requests.put(api_file_url, headers=headers, json=data)
+            elif response.status_code == 404:
+                # File does not exist, create it
+                response = requests.put(api_file_url, headers=headers, json=data)
+            else:
+                response.raise_for_status()
+
+            if response.status_code not in [200, 201]:
+                print(
+                    f"Failed to push {relative_path}: {response.status_code} {response.text}"
+                )
+
+
+def existing_repo_pipeline(org_name, repo_name, github_token):
+    branch_name = simpledialog.askstring(
+        "Branch Name", "Enter the branch name:", initialvalue="main"
+    )
+    github_pages = messagebox.askyesno(
+        "GitHub Pages", "Do you want to enable GitHub Pages for this repository?"
+    )
+
+    output_dir = "output"  # Path to the output directory
+    repo_dir = "clonned"  # Path to the clonned directory
+
+    # Copy Markdown files from output_dir to repo_dir
+    md_files = [f for f in os.listdir(output_dir) if f.endswith(".md")]
+    for md_file in md_files:
+        shutil.copy(os.path.join(output_dir, md_file), os.path.join(repo_dir, md_file))
+
+    # Copy styles.css and script.js from root to repo_dir
+    src_script = "script.js"
+    src_styles = "styles.css"
+    shutil.copy(src_script, os.path.join(repo_dir, src_script))
+    shutil.copy(src_styles, os.path.join(repo_dir, src_styles))
+
+    # Collect all Markdown files from repo_dir
+    md_files = [f for f in os.listdir(repo_dir) if f.endswith(".md")]
+
+    # Create or update index.html in repo_dir
+    index_content = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Doc2MD Converter</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css" />
+    <script src="https://unpkg.com/markdown-it/dist/markdown-it.min.js"></script>
+    <script src="https://unpkg.com/marked/marked.min.js"></script>
+    <script src="https://unpkg.com/markdown-it-imsize/dist/markdown-it-imsize.min.js"></script>
+    <script src="script.js"></script>
+</head>
+<body>
+<header style="background-color:black;color:white;padding:1rem;font-weight:bold;font-family:arial;position:fixed;left:0;top:0;width:100%">Deloitte</header>
+    <div id="main-div-page">
+        <div id="sidebar">
+            <ul>
+            <li><a href="#content"></a></li>
+"""
+
+    for md_file in md_files:
+        file_link = os.path.basename(md_file)
+        display_name = file_link.replace(".md", "")
+        index_content += f'<li><a href="#" onclick="handleMenuItemClick(\'{file_link}\')">{display_name}</a></li>'
+
+    index_content += """
+            </ul>
+            </div>
+            <div id="content"></div>
+            </div>
+            </body>
+            </html>
+            """
+
+    # Save index.html to repo_dir
+    index_file_path = os.path.join(repo_dir, "index.html")
+    with open(index_file_path, "w") as index_file:
+        index_file.write(index_content)
+
+    # Upload all Markdown files to GitHub and update existing files
+    for file_name in md_files:
+        file_path = os.path.join(repo_dir, file_name)
+        with open(file_path, "r") as f:
+            md_content = f.read()
+        file_content_base64 = base64.b64encode(md_content.encode()).decode()
+
+    # Upload index.html file to GitHub
+    with open(index_file_path, "r") as index_file:
+        index_content_base64 = base64.b64encode(index_file.read().encode()).decode()
+
+    # Upload styles.css and script.js to GitHub
+    for file_name in ["styles.css", "script.js"]:
+        file_path = os.path.join(repo_dir, file_name)
+        with open(file_path, "r") as file:
+            file_content_base64 = base64.b64encode(file.read().encode()).decode()
+
+    # Upload images if needed and delete them after upload
+    images_dir = os.path.join(repo_dir, "images")
+    if os.path.isdir(images_dir):
+        for image_file in os.listdir(images_dir):
+            if image_file.endswith((".png", ".jpg", ".jpeg")):
+                image_path = os.path.join(images_dir, image_file)
+                with open(image_path, "rb") as img_file:
+                    img_content = img_file.read()
+                image_base64 = base64.b64encode(img_content).decode()
+                image_file_path = f"images/{image_file}"
+
+    push_files_to_repo(org_name, repo_name, branch_name, github_token, "clonned")
+    if github_pages:
+        create_github_pages(org_name, repo_name, github_token)
+
+
+def new_repo_pipeline(org_name, repo_name, github_token):
     branch_name = simpledialog.askstring(
         "Branch Name", "Enter the branch name:", initialvalue="main"
     )
@@ -156,6 +408,8 @@ def save_on_github():
             </body>
             </html>
             """
+
+    # if repo_option is true use below logic but if repo option is false ,then first check if clonned dir exists,then check if index.html exists => update the index.html with below logic and add updates there . But if index.html doesn't exists then use below logic and create a new index.html
 
     # Save index.html to output_dir
     index_file_path = os.path.join(output_dir, "index.html")
