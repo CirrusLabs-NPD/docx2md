@@ -297,7 +297,7 @@ def existing_repo_pipeline(org_name, repo_name, github_token):
     <script src="script.js"></script>
 </head>
 <body>
-<header style="background-color:black;color:white;padding:1rem;font-weight:bold;font-family:arial;position:fixed;left:0;top:0;width:100%">Deloitte</header>
+<header style="background-color:black;color:white;padding:1rem;font-weight:bold;font-family:arial;position:fixed;left:0;top:0;width:100%">CirrusLabs</header>
     <div id="main-div-page">
         <div id="sidebar">
             <ul>
@@ -387,7 +387,7 @@ def new_repo_pipeline(org_name, repo_name, github_token):
     <script src="script.js"></script>
 </head>
 <body>
-<header style="background-color:black;color:white;padding:1rem;font-weight:bold;font-family:arial;position:fixed;left:0;top:0;width:100%">Deloitte</header>'
+<header style="background-color:black;color:white;padding:1rem;font-weight:bold;font-family:arial;position:fixed;left:0;top:0;width:100%">Cirruslabs</header>'
     <div id="main-div-page">
         <div id="sidebar">
             <ul>
@@ -519,7 +519,9 @@ def create_github_pages(org_name, repo_name, token):
 
 
 def guide_to_github():
-    webbrowser.open_new("https://developer.deloitte.com/ecr-docs/deloittegithub/")
+    webbrowser.open_new(
+        "https://docs.github.com/en/get-started/onboarding/getting-started-with-your-github-account"
+    )
 
 
 def github_pat_token():
