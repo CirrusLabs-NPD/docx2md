@@ -12,7 +12,7 @@ This project provides a utility to convert `.docx` files to Markdown format.
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/Deloitte-Global-Cloud-Services/docx2md.git
+git clone https://github.com/CirrusLabs-NPD/docx2md.git
 ```
 
 ```bash
@@ -58,7 +58,7 @@ docx2md/
 
 ```
 ### 6. Run the python App
-Start the Streamlit app:
+Start the doc2md app:
 
 ```bash
 python app.py          
